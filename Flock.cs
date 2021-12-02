@@ -41,7 +41,7 @@ public class Flock : MonoBehaviour
         {
             FlockAgent newAgent = Instantiate(
                 agentPrefab,
-                Random.insideUnitSphere * startingCount * AgentDensity,                                         // Note that, use InsideUnitCircle for 2D, and InsideUnitSphere for 3D
+                Random.insideUnitSphere * startingCount * AgentDensity,                                         // Note that, use insideUnitCircle for 2D, and insideUnitSphere for 3D
                 Quaternion.Euler(Vector3.up * Random.Range(0f, 360f)),
                 transform);
             
@@ -54,6 +54,35 @@ public class Flock : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        foreach(FlockAgent agent in agents)
+        {
+            List<Transform> context = GetNearbyObjects(agent);
+
+            Vector3 move = behaviour.CalculateMove(agent, context, this);
+            move *= driveFactor;
+
+            if (move.sqrMagnitude > squareMaxSpeed)
+            {
+                move = move.normalized * maxSpeed;
+            }
+            agent.Move(move);
+        }
+
+    }
+
+    List<Transform> GetNearbyObjects(FlockAgent agent)
+    {
+        List<Transform> context = new List<Transform>();
+        Collider[] contextColliders = Physics.OverlapSphere(agent.transform.position, neighbourRadius);
+
+        foreach(Collider col in contextColliders)
+        {
+            if (col != agent.AgentCollider)
+            {
+                context.Add(col.transform);
+            }
+        }
+
+        return context;
     }
 }
